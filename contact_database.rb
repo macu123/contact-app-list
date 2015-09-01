@@ -11,9 +11,13 @@ class Contact_database
   end
 
   def self.add_contact(contact)
-    idx = CSV.readlines("contacts.csv").length
+    idx = CSV.readlines("contacts.csv").length + 1
     CSV.open("contacts.csv", "a") do |csv|
-      csv << ["#{idx}" ,"#{contact.name}", "#{contact.email}"]
+      data = ["#{idx}" ,"#{contact.name}", "#{contact.email}"]
+      contact.phone_numbers.each do |label, number|
+        data << "#{label}: #{number}"
+      end
+      csv << data
     end
     idx
   end

@@ -10,31 +10,31 @@ class Contact_list
   end
 
   # get users phone numbers
-  # def self.get_phone_num
-  #   phone_num = {}
-  #   while true
-  #     puts "Do you have a phone number? (Y/N)"
-  #     command = get_user_input
-  #     case command
-  #     when "Y"
-  #       puts "Please input the label of the phone number now:"
-  #       label = get_user_input
-  #       puts "Please input the number itself now:"
-  #       number = get_user_input
-  #       phone_num[label] = number
-  #     when "N"
-  #       break
-  #     else
-  #       puts "Sorry I don't understand your command!"
-  #     end
-  #   end
-  #   phone_num
-  # end
+  def self.get_phone_num
+    phone_numbers = {}
+    while true
+      puts "Do you have a phone number? (Y/N)"
+      command = get_user_input
+      case command
+      when "Y"
+        puts "Please input the label of the phone number now:"
+        label = get_user_input
+        puts "Please input the number itself now:"
+        number = get_user_input
+        phone_numbers[label] = number
+      when "N"
+        return phone_numbers
+      else
+        puts "Sorry I don't understand your command!"
+      end
+    end
+  end
 
   # print contact details in separate lines
-  def self.puts_details(contact_ele)
-    puts "Name: #{contact_ele[1]}"
-    puts "Email: #{contact_ele[2]}"
+  def self.puts_details(contact)
+    puts "Name: #{contact.name}"
+    puts "Email: #{contact.email}"
+    puts "Phone numbers: #{contact.phone_numbers}"
   end
 
   # determine which command to execute
@@ -69,7 +69,9 @@ class Contact_list
       name = get_user_input
     end
 
-    puts Contact.create(name, email)
+    phone_numbers = get_phone_num
+
+    puts Contact.create(name, email, phone_numbers)
   end
   
   # list all contacts
@@ -82,9 +84,9 @@ class Contact_list
 
   # show a contact with ID
   def self.show_contact  
-    contact_ele = Contact.show(ARGV[1])
-    if contact_ele
-      puts_details(contact_ele)
+    contact = Contact.show(ARGV[1])
+    if contact
+      puts_details(contact)
     else
       puts "Sorry we couldn't find a contact with ID #{ARGV[1]}"
     end
@@ -93,9 +95,9 @@ class Contact_list
   # find a contact with term
   def self.find_contact
     search_term = ARGV[1]
-    contact_ele = Contact.find(search_term)
-    if contact_ele
-      puts_details(contact_ele)
+    contact = Contact.find(search_term)
+    if contact
+      puts_details(contact)
     else
       puts "Sorry we couldn't find a contact with the search term #{search_term}"
     end
