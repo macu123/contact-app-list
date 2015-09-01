@@ -3,17 +3,19 @@ class Contact
   attr_accessor :name, :email
 
   def initialize(name, email)
-    # TODO: assign local variables to instance variables
+    @name = name
+    @email = email
   end
  
   def to_s
-    # TODO: return string representation of Contact
+    "#{@name} (#{@email})"
   end
  
   ## Class Methods
   class << self
     def create(name, email)
-      # TODO: Will initialize a contact as well as add it to the list of contacts
+      contact = Contact.new(name, email)
+      Contact_database.add_contact(contact)
     end
  
     def find(term)
@@ -21,13 +23,18 @@ class Contact
     end
  
     def all
-      # TODO: Return the list of contacts, as is
+      Contact_database.read_all_contacts
     end
     
     def show(id)
-      # TODO: Show a contact, based on ID
+      contacts = Contact_database.read_all_contacts
+      contacts.each do |contact|
+        if contact[0] == id
+          return contact
+        end
+      end
+      false
     end
-    
   end
- 
 end
+ 
