@@ -3,3 +3,4 @@
  
 gem 'rspec'
 gem 'pry'
+gem 'pg'

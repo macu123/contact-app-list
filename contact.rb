@@ -1,80 +1,93 @@
-class Contact
- 
-  attr_accessor :name, :email, :phone_numbers
+require 'pg'
 
-  def initialize(name, email, phone_numbers)
-    @name = name
+class Contact
+
+  attr_accessor :firstname, :lastname, :email
+  attr_reader :id
+
+  def initialize(firstname, lastname, email, id = nil)
+    @firstname = firstname
+    @lastname = lastname
     @email = email
-    @phone_numbers = phone_numbers
+    @id = id
   end
- 
-  def to_s
-    "#{name} (#{email}) #{phone_numbers}"
+
+  def save
+    if persisted?
+      sql = "UPDATE contacts SET firstname = $1, lastname = $2, email = $3 WHERE id = #{id};"
+    else
+      sql = "INSERT INTO contacts (firstname, lastname, email) VALUES ($1, $2, $3);"
+    end
+    self.class.connection.exec_params(sql, [firstname, lastname, email])
+    @id = self.class.find_by_email(email).id
+    true
+  rescue PG::Error
+    false
+  end
+
+  def destroy
+    sql = "DELETE FROM contacts WHERE id = $1;"
+    self.class.connection.exec_params(sql, [id])
+    self
+  end
+
+  def persisted?
+    !id.nil?
   end
  
   ## Class Methods
   class << self
-    def create(name, email, phone_numbers)
-      contact = Contact.new(name, email, phone_numbers)
-      Contact_database.add_contact(contact)
+    def find(id)
+      sql = "SELECT * FROM contacts WHERE id = $1;"
+      connection.exec_params(sql, [id]) do |response|
+        result = response.values[0]
+        Contact.new(result[1], result[2], result[3], result[0])
+      end
+    rescue PG::Error
+      nil
     end
 
-    def duplicate?(email)
-      contacts_arr = Contact_database.read_all_contacts
-      contacts_arr.each do |contact_ele|
-        return true if contact_ele[2] == email
-      end
-      false
-    end
- 
-    def find(search_term)
-      contacts_arr = Contact_database.read_all_contacts
-      contacts_arr.each do |contact_ele|
-        if (contact_ele[1].include? search_term) || (contact_ele[2].include? search_term)
-          phone_numbers = create_phone_numbers_from_csv(contact_ele)
-          contact = Contact.new(contact_ele[1], contact_ele[2], phone_numbers)
-          return contact
+    def find_all_by_lastname(name)
+      contacts = []
+
+      sql = "SELECT * FROM contacts WHERE lastname = $1;"
+      connection.exec_params(sql, [name]) do |response|
+        response.values.each do |row|
+          contacts << Contact.new(row[1], row[2], row[3], row[0])
         end
       end
-      false
-    end
- 
-    def create_phone_numbers_from_csv(contact_ele)
-      phone_numbers = {}
-      i = 3
-      while contact_ele[i] != nil do
-        phone_number = contact_ele[i]
-        arr = phone_number.split(":")
-        label = arr[0]
-        num = arr[1]
-        phone_numbers[label] = num
-        i += 1
-      end
-      phone_numbers
+      contacts
     end
 
-    def all
-      contacts_arr = Contact_database.read_all_contacts
-      contacts_str_arr = []
-      contacts_arr.each do |contact_ele|
-        phone_numbers = create_phone_numbers_from_csv(contact_ele)
-        contact = Contact.new(contact_ele[1], contact_ele[2], phone_numbers)
-        contacts_str_arr << contact_ele[0] + ": " + contact.to_s
-      end
-      contacts_str_arr
-    end
-    
-    def show(id)
-      contacts_arr = Contact_database.read_all_contacts
-      contacts_arr.each do |contact_ele|
-        if contact_ele[0] == id
-          phone_numbers = create_phone_numbers_from_csv(contact_ele)
-          contact = Contact.new(contact_ele[1], contact_ele[2], phone_numbers)
-          return contact
+    def find_all_by_firstname(name)
+      contacts = []
+
+      sql = "SELECT * FROM contacts WHERE firstname = $1;"
+      connection.exec_params(sql, [name]) do |response|
+        response.values.each do |row|
+          contacts << Contact.new(row[1], row[2], row[3], row[0])
         end
       end
-      false
+      contacts
+    end
+
+    def find_by_email(email)
+      sql = "SELECT * FROM contacts WHERE email = $1;"
+      connection.exec_params(sql, [email]) do |response|
+        result = response.values[0]
+        Contact.new(result[1], result[2], result[3], result[0])
+      end
+    rescue PG::Error
+      nil
+    end
+
+    def connection
+      conn = PG.connect(
+        host: 'localhost',
+        dbname: 'contact_list',
+        user: 'development',
+        password: 'development'
+        )
     end
   end
 end
- 
