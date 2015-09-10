@@ -1,5 +1,3 @@
-require_relative '../setup'
-
 # This should be the only file where you use puts and gets
 class Contact_list
 
@@ -9,8 +7,7 @@ class Contact_list
   end
 
   # get users phone numbers
-  def self.get_phone_num
-    phone_numbers = {}
+  def self.get_phone_num(contact)
     while true
       puts "Do you have a phone number? (Y/N)"
       command = get_user_input
@@ -20,9 +17,18 @@ class Contact_list
         label = get_user_input
         puts "Please input the number itself now:"
         number = get_user_input
-        phone_numbers[label] = number
+        phonenumber = contact.phonenumbers.create(label: label, number: number)
+        if phonenumber.persisted?
+          puts "Phone number saved!"
+          next
+        end
+
+        phonenumber.errors.full_messages.each do |message|
+          puts message
+        end
       when "N"
-        return phone_numbers
+        puts "Exit!"
+        return
       else
         puts "Sorry I don't understand your command!"
       end
@@ -31,9 +37,15 @@ class Contact_list
 
   # print contact details in separate lines
   def self.puts_details(contact)
-    puts "Name: #{contact.name}"
+    puts "First Name: #{contact.firstname}"
+    puts "Last Name: #{contact.lastname}"
     puts "Email: #{contact.email}"
-    puts "Phone numbers: #{contact.phone_numbers}"
+
+    puts contact.phonenumbers
+    contact.phonenumbers.each do |phonenumber|
+      print "#{phonenumber.label}: #{phonenumber.number} "
+    end
+    print "\n"
   end
 
   # determine which command to execute
@@ -60,48 +72,74 @@ class Contact_list
   def self.create_contact
     puts "Please input the email now:"
     email = get_user_input
-    if Contact.duplicate?(email)
-      puts "The contact already exists and cannot be created"
+    puts "Please input the first name now:"
+    firstname = get_user_input
+    puts "Please input the last name now:"
+    lastname = get_user_input
+    contact = Contact.create(firstname: firstname, lastname: lastname, email: email)
+    if contact.persisted?
+      puts "Contact saved!"
+      get_phone_num(contact)
       return
-    else
-      puts "Please input the full name now:"
-      name = get_user_input
     end
 
-    phone_numbers = get_phone_num
-
-    puts Contact.create(name, email, phone_numbers)
+    contact.errors.full_messages.each do |message|
+      puts message
+    end
   end
   
   # list all contacts
   def self.list_contacts
-    contacts_str_arr = Contact.all
-    contacts_str_arr.each do |contact_str|
-      puts contact_str
+    Contact.all.each do |contact|
+      puts_details(contact)
+      puts "**********************************"
     end
   end
 
   # show a contact with ID
   def self.show_contact  
-    contact = Contact.show(ARGV[1])
-    if contact
-      puts_details(contact)
-    else
-      puts "Sorry we couldn't find a contact with ID #{ARGV[1]}"
-    end
+    contact = Contact.find(ARGV[1])
+    puts_details(contact)
+  rescue
+    puts "Sorry we couldn't find a contact with ID #{ARGV[1]}"
+  end
+
+  def self.find_contact_by_firstname(search_term)
+    contact = Contact.where('firstname LIKE ?', "%#{search_term}%").first
+    puts_details(contact)
+    true
+  rescue
+    puts "Sorry we couldn't find a contact with the search term #{search_term} in firstname"
+    false
+  end
+
+  def self.find_contact_by_lastname(search_term)
+    contact = Contact.where('lastname LIKE ?', "%#{search_term}%").first
+    puts_details(contact)
+    true
+  rescue
+    puts "Sorry we couldn't find a contact with the search term #{search_term} in lastname"
+    false
+  end
+
+  def self.find_contact_by_email(search_term)
+    contact = Contact.where('email LIKE ?', "%#{search_term}%").first
+    puts_details(contact)
+    true
+  rescue
+    puts "Sorry we couldn't find a contact with the search term #{search_term} in email"
+    false
   end
 
   # find a contact with term
   def self.find_contact
     search_term = ARGV[1]
-    contact = Contact.find(search_term)
-    if contact
-      puts_details(contact)
+    if find_contact_by_email(search_term)
+      return
+    elsif find_contact_by_firstname(search_term)
+      return
     else
-      puts "Sorry we couldn't find a contact with the search term #{search_term}"
+      find_contact_by_lastname(search_term)
     end
   end
-
 end
-
-Contact_list.which_command_to_execute(ARGV[0])

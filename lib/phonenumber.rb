@@ -1,4 +1,4 @@
-class Phone_number < ActiveRecord::Base
+class Phonenumber < ActiveRecord::Base
   belongs_to :contact
   validates :contact, presence: true
   validates :label, presence: true, inclusion: {within: ["Work", "Home", "Mobile"]}

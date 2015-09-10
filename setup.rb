@@ -1,6 +1,8 @@
 require 'pry'
 require 'active_record'
 require_relative 'lib/contact'
+require_relative 'lib/phonenumber'
+require_relative 'lib/contact_list'
 
 ActiveRecord::Base.logger = Logger.new(STDOUT)
 
@@ -22,20 +24,24 @@ puts 'CONNECTED'
 puts 'Setting up Database (recreating tables) ...'
 
 ActiveRecord::Schema.define do
-  drop_table :contacts if ActiveRecord::Base.connection.table_exists?(:contacts)
-  drop_table :phone_numbers if ActiveRecord::Base.connection.table_exists?(:phone_numbers)
-  
-  create_table :contacts do |table|
-    table.column :firstname, :string
-    table.column :lastname, :string
-    table.column :email, :string
-  end
 
-  create_table :phone_numbers do |table|
-    table.references :contact
-    table.column :label, :string
-    table.column :number, :string
+  unless ActiveRecord::Base.connection.table_exists?(:contacts)
+    create_table :contacts do |table|
+      table.column :firstname, :string
+      table.column :lastname, :string
+      table.column :email, :string
+    end
+  end
+  
+  unless ActiveRecord::Base.connection.table_exists?(:phonenumbers)
+    create_table :phonenumbers do |table|
+      table.references :contact
+      table.column :label, :string
+      table.column :number, :string
+    end
   end
 end
 
 puts 'Setup DONE'
+
+Contact_list.which_command_to_execute(ARGV[0])
