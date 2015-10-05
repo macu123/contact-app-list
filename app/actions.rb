@@ -20,10 +20,14 @@ post '/contacts/create' do
   response.to_json
 end
 
+get '/contacts/search/:search_term' do
+  contacts = Contact.where("firstname LIKE ? OR lastname LIKE ? OR email LIKE ?", "%#{params[:search_term]}%", "%#{params[:search_term]}%", "%#{params[:search_term]}%")
+  contacts.to_json
+end
+
 get '/contacts/:id' do
-  if contact = Contact.find(params[:id])
-    contact.to_json
-  end
+  contact = Contact.find(params[:id])
+  contact.to_json
 end
 
 delete '/contacts/:id' do
@@ -33,11 +37,5 @@ delete '/contacts/:id' do
     contact.destroy
     response[:result] =true
     response[:id] = contact.id
-  end
-end
-
-get '/contacts/search/:search_term' do
-  if contact = Contact.where("firstname LIKE ? OR lastname LIKE ? OR email LIKE ?", "%#{params[:search_term]}%", "%#{params[:search_term]}%", "%#{params[:search_term]}%").first
-    contact.to_json
   end
 end
