@@ -1,5 +1,22 @@
 .new_contact,
-.search_form,
-.show_delete_form {
+.search_form {
   margin: 20px;
+}
+
+.search_form,
+.show_form,
+.delete_form {
+  display: inline-block;
+}
+
+.search_form > button {
+  margin-top: 10px;
+}
+
+.show_form > button {
+  margin-top: 10px;
+}
+
+.delete_form > button {
+  margin-top: 10px;
 }
